@@ -99,8 +99,8 @@ def run(model=None,  # model.pt path(s)
             poly = [x.item() for x in xyxy]
             
             # poly剪裁
-            # cut_img = cut(poly,im0s)
-            # cv2.imwrite(f'imgs_cut/im_{i}_{conf}.jpg', cut_img)
+            cut_img = cut(poly,im0s)
+            cv2.imwrite(f'imgs_cut/im_{i}_{conf}.jpg', cut_img)
             
             json_data.append({
                 "poly": poly,
