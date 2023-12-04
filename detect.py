@@ -35,12 +35,26 @@ from utils.torch_utils import select_device
 from utils.rboxs_utils import rbox2poly
 
 
+def cut(poly,im0s):
+    corners = np.array([[poly[0],poly[1]],[poly[2],poly[3]],[poly[4],poly[5]],[poly[6],poly[7]]])
+    # 获取旋转矩形的四个角点
+    box = np.int0(corners)
+    src_pts = box.astype(np.float32)
+    w = np.sqrt(np.sum((src_pts[0] - src_pts[1]) ** 2))
+    h = np.sqrt(np.sum((src_pts[1] - src_pts[2]) ** 2))
+    size = (int(w), int(h))
+    # 计算透视变换矩阵
+    dst_pts = np.array([[0, 0], [size[0], 0], [size[0], size[1]], [0, size[1]]], dtype=np.float32)
+    M = cv2.getPerspectiveTransform(src_pts, dst_pts)
+    result = cv2.warpPerspective(im0s, M, (size[0], size[1]))
+    return result
+
 @torch.no_grad()
 def run(model=None,  # model.pt path(s)
         source=ROOT / 'data/images',  # file/dir/URL/glob, 0 for webcam
         device=None,  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         imgsz=(1280, 1280),  # inference size (height, width)
-        conf_thres=0.25,  # confidence threshold
+        conf_thres=0.56,  # confidence threshold
         iou_thres=0.45,  # NMS IOU threshold
         max_det=1000,  # maximum detections per image
         classes=None,  # filter by class: --class 0, or --class 0 2 3
@@ -81,8 +95,13 @@ def run(model=None,  # model.pt path(s)
         
         # 转化为 json 格式
         json_data = []
-        for *xyxy, conf, cls in reversed(det):
+        for i,(*xyxy, conf, cls) in enumerate(reversed(det)):
             poly = [x.item() for x in xyxy]
+            
+            # poly剪裁
+            # cut_img = cut(poly,im0s)
+            # cv2.imwrite(f'imgs_cut/im_{i}_{conf}.jpg', cut_img)
+            
             json_data.append({
                 "poly": poly,
                 "conf": conf.item(),
@@ -96,7 +115,7 @@ def run(model=None,  # model.pt path(s)
 
 if __name__ == "__main__":
     imgsz=(1280, 1280)
-    source = 'weights/1.jpg'
+    source = 'imgs/1.jpg'
     device = select_device("cpu")
     
     model = DetectMultiBackend('weights/best.pt', device=device)
