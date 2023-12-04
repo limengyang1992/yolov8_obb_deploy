@@ -1,0 +1,36 @@
+ninja_required_version = 1.3
+cxx = c++
+nvcc = /usr/local/cuda/bin/nvcc
+
+cflags = -pthread -B /home/kunyu/anaconda3/envs/torch13/compiler_compat -Wno-unused-result -Wsign-compare -DNDEBUG -O2 -Wall -fPIC -O2 -isystem /home/kunyu/anaconda3/envs/torch13/include -I/home/kunyu/anaconda3/envs/torch13/include -fPIC -O2 -isystem /home/kunyu/anaconda3/envs/torch13/include -fPIC -DWITH_CUDA -I/home/kunyu/anaconda3/envs/torch13/lib/python3.9/site-packages/torch/include -I/home/kunyu/anaconda3/envs/torch13/lib/python3.9/site-packages/torch/include/torch/csrc/api/include -I/home/kunyu/anaconda3/envs/torch13/lib/python3.9/site-packages/torch/include/TH -I/home/kunyu/anaconda3/envs/torch13/lib/python3.9/site-packages/torch/include/THC -I/usr/local/cuda/include -I/home/kunyu/anaconda3/envs/torch13/include/python3.9 -c
+post_cflags = -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=nms_rotated_ext -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++14
+cuda_cflags = -DWITH_CUDA -I/home/kunyu/anaconda3/envs/torch13/lib/python3.9/site-packages/torch/include -I/home/kunyu/anaconda3/envs/torch13/lib/python3.9/site-packages/torch/include/torch/csrc/api/include -I/home/kunyu/anaconda3/envs/torch13/lib/python3.9/site-packages/torch/include/TH -I/home/kunyu/anaconda3/envs/torch13/lib/python3.9/site-packages/torch/include/THC -I/usr/local/cuda/include -I/home/kunyu/anaconda3/envs/torch13/include/python3.9 -c
+cuda_post_cflags = -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr --compiler-options ''"'"'-fPIC'"'"'' -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=nms_rotated_ext -D_GLIBCXX_USE_CXX11_ABI=0 -gencode=arch=compute_80,code=sm_80 -std=c++14
+cuda_dlink_post_cflags = 
+ldflags = 
+
+rule compile
+  command = $cxx -MMD -MF $out.d $cflags -c $in -o $out $post_cflags
+  depfile = $out.d
+  deps = gcc
+
+rule cuda_compile
+  depfile = $out.d
+  deps = gcc
+  command = $nvcc  $cuda_cflags -c $in -o $out $cuda_post_cflags
+
+
+
+
+
+build /home/kunyu/Yolov8_obb_Prune_Track-main/utils/nms_rotated/build/temp.linux-x86_64-3.9/src/nms_rotated_cpu.o: compile /home/kunyu/Yolov8_obb_Prune_Track-main/utils/nms_rotated/src/nms_rotated_cpu.cpp
+build /home/kunyu/Yolov8_obb_Prune_Track-main/utils/nms_rotated/build/temp.linux-x86_64-3.9/src/nms_rotated_cuda.o: cuda_compile /home/kunyu/Yolov8_obb_Prune_Track-main/utils/nms_rotated/src/nms_rotated_cuda.cu
+build /home/kunyu/Yolov8_obb_Prune_Track-main/utils/nms_rotated/build/temp.linux-x86_64-3.9/src/nms_rotated_ext.o: compile /home/kunyu/Yolov8_obb_Prune_Track-main/utils/nms_rotated/src/nms_rotated_ext.cpp
+build /home/kunyu/Yolov8_obb_Prune_Track-main/utils/nms_rotated/build/temp.linux-x86_64-3.9/src/poly_nms_cuda.o: cuda_compile /home/kunyu/Yolov8_obb_Prune_Track-main/utils/nms_rotated/src/poly_nms_cuda.cu
+
+
+
+
+
+
+
